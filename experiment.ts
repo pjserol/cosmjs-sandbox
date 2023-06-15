@@ -56,6 +56,24 @@ const runAll = async (): Promise<void> => {
         ", height:",
         await signingClient.getHeight()
     )
+
+    console.log("Gas fee:", decodedTx.authInfo!.fee!.amount)
+    console.log("Gas limit:", decodedTx.authInfo!.fee!.gasLimit.toString(10))
+
+    // Check the balance of Alice and the Faucet
+    console.log("Alice balance before:", await client.getAllBalances(alice))
+    console.log("Faucet balance before:", await client.getAllBalances(faucet))
+
+    // Execute the sendTransaction Tx and store the result
+    const result = await signingClient.sendTokens(alice, faucet, [{ denom: "uatom", amount: "100000" }], {
+        amount: [{ denom: "uatom", amount: "500" }],
+        gas: "200000",
+    })
+
+    // Output the result of the Tx
+    console.log("Transfer result:", result)
+    console.log("Alice balance after:", await client.getAllBalances(alice))
+    console.log("Faucet balance after:", await client.getAllBalances(faucet))
 }
 
 runAll()
