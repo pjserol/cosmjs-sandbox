@@ -5,7 +5,7 @@ import { IndexedTx, SigningStargateClient, StargateClient } from "@cosmjs/starga
 import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx"
 import { Tx } from "cosmjs-types/cosmos/tx/v1beta1/tx"
 
-const cosmosEnv = process.env.cosmos_environment || "local"
+const cosmosEnv = process.env.cosmos_environment || "testnet"
 
 let rpc: string
 if (cosmosEnv === "testnet") {
@@ -96,6 +96,13 @@ const runAll = async (): Promise<void> => {
     console.log("Alice's address from signer", alice)
 
     const signingClient = await SigningStargateClient.connectWithSigner(rpc, aliceSigner)
+
+    // when using auto, in broadcast:
+    // const signingClient = await SigningStargateClient.connectWithSigner(rpc, aliceSigner, {
+    //     prefix: "cosmos",
+    //     gasPrice: GasPrice.fromString("0.0025uatom"),
+    // })
+
     console.log(
         "With signing client, chain id:",
         await signingClient.getChainId(),
@@ -120,6 +127,45 @@ const runAll = async (): Promise<void> => {
     console.log("Transfer result:", result)
     console.log("Alice balance after:", await client.getAllBalances(alice))
     console.log("Faucet balance after:", await client.getAllBalances(faucet))
+
+    if (cosmosEnv === "testnet") {
+        const validator: string = "cosmosvaloper1jeeayd4mtejnnwlmgwsjgrc6n3kl7hdvgvnsel" //01node
+
+        const resultBroadcast = await signingClient.signAndBroadcast(
+            // the signerAddress
+            alice,
+            // the message(s)
+            [
+                {
+                    typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+                    value: {
+                        fromAddress: alice,
+                        toAddress: faucet,
+                        amount: [{ denom: token, amount: "100000" }],
+                    },
+                },
+                {
+                    typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+                    value: {
+                        delegatorAddress: alice,
+                        validatorAddress: validator,
+                        amount: { denom: "uatom", amount: "1000" },
+                    },
+                },
+            ],
+            // the fee
+            {
+                amount: [{ denom: token, amount: "500" }],
+                gas: "200000",
+            }
+            // "auto"
+        )
+
+        // Output the result of the Tx
+        console.log("Transfer result broadcast:", resultBroadcast)
+        console.log("Alice balance after:", await client.getAllBalances(alice))
+        console.log("Faucet balance after:", await client.getAllBalances(faucet))
+    }
 }
 
 runAll()

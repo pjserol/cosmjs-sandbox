@@ -109,3 +109,7 @@ export bob=cosmos1ytt4z085fwxwnj0xdckk43ek4c9znuy00cghtq
     --home ./private/.simapp \
     --keyring-backend test
 ```
+
+## List of validor adresses testnet
+
+<https://explorer.theta-testnet.polypore.xyz/validators>
